@@ -2,6 +2,7 @@ services:
 
   database:
     image: "postgres:16"
+    restart: always
     environment:
       POSTGRES_USER: omero
       POSTGRES_DB: omero
@@ -16,19 +17,22 @@ services:
     # This container uses the tag for the latest server release of OMERO 5
     # To upgrade to the next major release, increment the major version number
     image: "openmicroscopy/omero-server:5"
+    restart: always
     environment:
       CONFIG_omero_db_host: database
       CONFIG_omero_db_user: omero
       CONFIG_omero_db_pass: omero
       CONFIG_omero_db_name: omero
-      ROOTPASS: omero
-    networks:
-      - omero
+      CONFIG_omero_web_csrf__trusted__origins: '["https://sc-cer00485.nectar.auckland.ac.nz"]'
     ports:
       - "4063:4063"
       - "4064:4064"
     volumes:
-      - "omero:/OMERO"
+      - "/data/omero:/OMERO"
+      - "./ressci202100010-Scotter-Images/Omero Storage/Miran/:/OMERO/DropBox/MMrkela:ro" # Note this is read-only twice for extra safety - once on the CIFS mount, and once in docker
+      - "./Figure_To_Pdf.py:/opt/omero/server/OMERO.server-5.6.16-ice36/lib/scripts/omero/figure_scripts/Figure_To_Pdf.py"
+      - "./setup_dropbox.sh:/opt/omero/setup_dropbox.sh"
+      - "./import.sh:/opt/omero/import.sh"
     ulimits:
       nofile:
         soft: 8192
@@ -38,10 +42,10 @@ services:
     # This container uses the tag for the latest web release of OMERO 5
     # To upgrade to the next major release, increment the major version number
     image: "openmicroscopy/omero-web-standalone:5"
+    restart: always
     environment:
       OMEROHOST: omeroserver
-    networks:
-      - omero
+      CONFIG_omero_web_csrf__trusted__origins: '["https://sc-cer00485.nectar.auckland.ac.nz"]'
     ports:
       - "4080:4080"
 
