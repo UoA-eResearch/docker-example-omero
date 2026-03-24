@@ -31,7 +31,6 @@ services:
       - "/data/omero:/OMERO"
       - "./ressci202100010-Scotter-Images/Omero Storage/Miran/:/OMERO/DropBox/MMrkela:ro" # Note this is read-only twice for extra safety - once on the CIFS mount, and once in docker
       - "./Figure_To_Pdf.py:/opt/omero/server/OMERO.server-5.6.16-ice36/lib/scripts/omero/figure_scripts/Figure_To_Pdf.py"
-      - "./setup_dropbox.sh:/opt/omero/setup_dropbox.sh"
       - "./import.sh:/opt/omero/import.sh"
     ulimits:
       nofile:
