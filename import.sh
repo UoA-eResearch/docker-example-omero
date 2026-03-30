@@ -19,20 +19,18 @@ exec 9>"$LOCK_FILE"
 
 import_one() {
     local file="$1"
-    local file_name
-    file_name="$(basename "$file")"
 
     flock 9
 
     if grep -Fxq "$file" "$DONE_FILE"; then
-        echo "Skipping already imported: $file_name"
+        echo "Skipping already imported: $file"
         flock -u 9
         return
     fi
 
     flock -u 9
 
-    echo "$(date) Importing: $file_name" | tee -a "$LOG_FILE"
+    echo "$(date) Importing: $file" | tee -a "$LOG_FILE"
 
     if omero import \
         --transfer=ln_s \
@@ -47,12 +45,12 @@ import_one() {
         flock 9
         echo "$file" >> "$DONE_FILE"
         flock -u 9
-        echo "$(date) SUCCESS: $file_name" | tee -a "$LOG_FILE"
+        echo "$(date) SUCCESS: $file" | tee -a "$LOG_FILE"
     else
         flock 9
         echo "$file" >> "$FAILED_FILE"
         flock -u 9
-        echo "$(date) FAILED: $file_name" | tee -a "$LOG_FILE"
+        echo "$(date) FAILED: $file" | tee -a "$LOG_FILE"
     fi
 }
 
