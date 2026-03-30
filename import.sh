@@ -18,21 +18,21 @@ touch "$DONE_FILE" "$FAILED_FILE" "$LOG_FILE"
 exec 9>"$LOCK_FILE"
 
 import_one() {
-    local folder="$1"
-    local folder_name
-    folder_name="$(basename "$folder")"
+    local file="$1"
+    local file_name
+    file_name="$(basename "$file")"
 
     flock 9
 
-    if grep -Fxq "$folder" "$DONE_FILE"; then
-        echo "Skipping already imported: $folder_name"
+    if grep -Fxq "$file" "$DONE_FILE"; then
+        echo "Skipping already imported: $file_name"
         flock -u 9
         return
     fi
 
     flock -u 9
 
-    echo "$(date) Importing: $folder_name" | tee -a "$LOG_FILE"
+    echo "$(date) Importing: $file_name" | tee -a "$LOG_FILE"
 
     if omero import \
         --transfer=ln_s \
@@ -42,17 +42,17 @@ import_one() {
         --sudo root \
         -w "$ROOTPASS" \
         -T "regex:.+MMrkela/(?<Container1>.*?)" \
-        "$folder"
+        "$file"
     then
         flock 9
-        echo "$folder" >> "$DONE_FILE"
+        echo "$file" >> "$DONE_FILE"
         flock -u 9
-        echo "$(date) SUCCESS: $folder_name" | tee -a "$LOG_FILE"
+        echo "$(date) SUCCESS: $file_name" | tee -a "$LOG_FILE"
     else
         flock 9
-        echo "$folder" >> "$FAILED_FILE"
+        echo "$file" >> "$FAILED_FILE"
         flock -u 9
-        echo "$(date) FAILED: $folder_name" | tee -a "$LOG_FILE"
+        echo "$(date) FAILED: $file_name" | tee -a "$LOG_FILE"
     fi
 }
 
@@ -60,5 +60,5 @@ export -f import_one
 export ROOTPASS DONE_FILE FAILED_FILE LOG_FILE LOCK_FILE
 export PATH=/opt/omero/server/OMERO.server/bin/:$PATH
 
-find "$SOURCE_DIR" -mindepth 1 -maxdepth 1 -type d | \
+find "$SOURCE_DIR" -mindepth 1 -type f | \
     xargs -I{} -P "$PARALLEL" bash -c 'import_one "$@"' _ {}
