@@ -86,5 +86,5 @@ export -f import_one
 export ROOTPASS DONE_DIR FAILED_FILE LOG_FILE LOCK_FILE
 export PATH=/opt/omero/server/OMERO.server/bin/:$PATH
 
-find "$SOURCE_DIR" -mindepth 1 -type f -print0 | \
+find "$SOURCE_DIR" -mindepth 1 -type f ! -name 'Thumbs.db' -print0 | \
     xargs -0 -I{} -P "$PARALLEL" bash -c 'import_one "$@"' _ {}
