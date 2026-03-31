@@ -62,7 +62,6 @@ import_one() {
 
     if omero import \
         --transfer=ln_s \
-        --parallel-fileset=$PARALLEL \
         -s localhost:4064 \
         -u MMrkela \
         --sudo root \
