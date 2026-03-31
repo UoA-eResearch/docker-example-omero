@@ -3,7 +3,7 @@
 set -euo pipefail
 
 SOURCE_DIR="/OMERO/DropBox/MMrkela"
-STATE_DIR="$HOME/.omero_import_state"
+STATE_DIR="/OMERO/.omero_import_state"
 
 # Per-file done state is stored as marker files under DONE_DIR so that
 # membership tests are O(1) filesystem lookups rather than O(N) grep scans.

@@ -1,3 +1,4 @@
+name: omero
 services:
 
   database:
