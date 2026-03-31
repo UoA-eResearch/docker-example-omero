@@ -7,7 +7,7 @@ share="//files.auckland.ac.nz/research/${drive_name}"
 # we therefore specify smb version 3.0, introduced with Windows 8 / Windows Server 2012
 smb_version="3.0"
 
-mountpoint="${HOME}/${drive_name}"
+mountpoint="${drive_name}"
 # A read only mount
 common_options="iocharset=utf8,workgroup=uoa,uid=${USER},ro,dir_mode=0555,file_mode=0444,nodev,nosuid,vers=${smb_version}"
 options="username=${USER},${common_options}"
