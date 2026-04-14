@@ -2,7 +2,20 @@
 
 set -euo pipefail
 
-SOURCE_DIR="/OMERO/DropBox/MMrkela"
+# Mapping between folder names and OMERO usernames
+declare -A USER_MAP=(
+    ["David"]="DGordon"
+    ["Emma"]="EScotter"
+    ["Evelyn"]="EJade"
+    ["Kyrah"]="KThumbadoo"
+    ["Miran"]="MMrkela"
+    ["Sebastian"]=""  # No matching user found
+    ["Serey"]="SNaidoo"
+    ["Sonalani"]="shsa310"
+    ["Victor"]="VZhong"
+)
+
+BASE_DIR="/OMERO/DropBox"
 STATE_DIR="/OMERO/.omero_import_state"
 
 # Per-file done state is stored as marker files under DONE_DIR so that
@@ -46,6 +59,8 @@ exec 9>"$LOCK_FILE"
 
 import_one() {
     local file="$1"
+    local username="$2"
+    local folder_name="$3"
     # Marker path mirrors the absolute file path under DONE_DIR, e.g.
     # /OMERO/DropBox/MMrkela/sub/img.tif → $DONE_DIR/OMERO/DropBox/…/img.tif
     local marker="$DONE_DIR${file}"
@@ -58,15 +73,15 @@ import_one() {
     fi
     flock -u 9
 
-    echo "$(date) Importing: $file" | tee -a "$LOG_FILE"
+    echo "$(date) Importing: $file (user: $username)" | tee -a "$LOG_FILE"
 
     if omero import \
         --transfer=ln_s \
         -s localhost:4064 \
-        -u MMrkela \
+        -u "$username" \
         --sudo root \
         -w "$ROOTPASS" \
-        -T "regex:.+MMrkela/(?<Container1>.*?)" \
+        -T "regex:.+${folder_name}/(?<Container1>.*?)" \
         "$file"
     then
         flock 9
@@ -86,5 +101,27 @@ export -f import_one
 export ROOTPASS DONE_DIR FAILED_FILE LOG_FILE LOCK_FILE
 export PATH=/opt/omero/server/OMERO.server/bin/:$PATH
 
-find "$SOURCE_DIR" -mindepth 1 -type f ! -name 'Thumbs.db' -print0 | \
-    xargs -0 -I{} -P "$PARALLEL" bash -c 'import_one "$@"' _ {}
+# Process each user's folder
+for folder_name in "${!USER_MAP[@]}"; do
+    username="${USER_MAP[$folder_name]}"
+
+    # Skip if no username mapping exists
+    if [[ -z "$username" ]]; then
+        echo "Skipping folder '$folder_name' - no OMERO user mapping found"
+        continue
+    fi
+
+    source_dir="$BASE_DIR/$folder_name"
+
+    # Skip if folder doesn't exist
+    if [[ ! -d "$source_dir" ]]; then
+        echo "Skipping '$folder_name' - directory does not exist: $source_dir"
+        continue
+    fi
+
+    echo "Processing folder: $folder_name (user: $username)"
+
+    # Process all files in this user's folder
+    find "$source_dir" -mindepth 1 -type f ! -name 'Thumbs.db' -print0 | \
+        xargs -0 -I{} -P "$PARALLEL" bash -c 'import_one "$1" "$2" "$3"' _ {} "$username" "$folder_name"
+done
